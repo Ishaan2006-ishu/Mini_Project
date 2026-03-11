@@ -30,6 +30,20 @@ app.get("/api/question",(req,res)=>{
 
 })
 
+app.post("/api/answer", (req, res) => {
+
+    const { question, answer } = req.body
+
+    console.log("Question:", question)
+    console.log("Answer:", answer)
+
+    res.json({
+        score: 7,
+        feedback: "Good explanation but try adding real world examples."
+    })
+
+})
+
 app.listen(5000, () => {
     console.log("Server running on port 5000")
 })
