@@ -13,9 +13,21 @@ app.get("/", (req, res) => {
 })
 
 app.get("/api/question",(req,res)=>{
+
+    const questions = [
+        "What is REST API?",
+        "Explain polymorphism in OOP.",
+        "What is the difference between SQL and NoSQL?",
+        "What is middleware in Node.js?",
+        "Explain event loop in JavaScript."
+    ]
+
+    const randomQuestion = questions[Math.floor(Math.random() * questions.length)]
+
     res.json({
-        question:"What is REST API?"
+        question: randomQuestion
     })
+
 })
 
 app.listen(5000, () => {
