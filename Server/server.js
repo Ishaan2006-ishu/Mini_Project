@@ -12,6 +12,12 @@ app.get("/", (req, res) => {
     res.send("MockMate Pro Server Running")
 })
 
+app.get("/api/question",(req,res)=>{
+    res.json({
+        question:"What is REST API?"
+    })
+})
+
 app.listen(5000, () => {
     console.log("Server running on port 5000")
 })
