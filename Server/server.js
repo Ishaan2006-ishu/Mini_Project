@@ -46,17 +46,29 @@ app.get("/api/question", (req, res) => {
 
 })
 
-app.post("/api/answer", (req, res) => {
+const Session = require("./models/Session")
 
-    const { question, answer } = req.body
+app.post("/api/answer", async (req,res)=>{
 
-    console.log("Question:", question)
-    console.log("Answer:", answer)
+ const { role, question, answer } = req.body
 
-    res.json({
-        score: 7,
-        feedback: "Good explanation but try adding real world examples."
-    })
+ const score = 7
+ const feedback = "Good explanation but add examples"
+
+ const session = new Session({
+   role,
+   question,
+   answer,
+   score,
+   feedback
+ })
+
+ await session.save()
+
+ res.json({
+   score,
+   feedback
+ })
 
 })
 
