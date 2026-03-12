@@ -2,11 +2,21 @@ const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
 require("dotenv").config()
+const Session = require("./models/session")
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
+
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => {
+    console.log("MongoDB Connected")
+})
+.catch(err => {
+    console.log("Database Error:", err)
+})
 
 app.get("/", (req, res) => {
     res.send("MockMate Pro Server Running")
@@ -46,7 +56,7 @@ app.get("/api/question", (req, res) => {
 
 })
 
-const Session = require("./models/Session")
+
 
 app.post("/api/answer", async (req,res)=>{
 
