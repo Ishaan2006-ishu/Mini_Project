@@ -23,40 +23,21 @@ app.get("/", (req, res) => {
     res.send("MockMate Pro Server Running")
 })
 
-app.get("/api/question", (req, res) => {
+app.get("/api/question", async (req, res) => {
 
-    const role = req.query.role
+ const role = req.query.role
 
-    const questions = {
-        frontend: [
-            "What is the Virtual DOM?",
-            "Difference between var, let and const?",
-            "Explain Flexbox in CSS"
-        ],
-        backend: [
-            "What is REST API?",
-            "Explain middleware in Node.js",
-            "What is JWT authentication?"
-        ],
-        ai: [
-            "What is machine learning?",
-            "Difference between supervised and unsupervised learning",
-            "What is overfitting?"
-        ]
-    }
+ const questions = await Question.find({ role })
 
-    const roleQuestions = questions[role] || questions.backend
+ const randomQuestion =
+   questions[Math.floor(Math.random() * questions.length)]
 
-    const randomQuestion =
-        roleQuestions[Math.floor(Math.random() * roleQuestions.length)]
-
-    res.json({
-        role: role,
-        question: randomQuestion
-    })
+ res.json({
+   role: role,
+   question: randomQuestion.question
+ })
 
 })
-
 
 
 app.post("/api/answer", async (req,res)=>{
@@ -99,4 +80,4 @@ const seedQuestions = async () => {
 
 }
 
-seedQuestions()
+// seedQuestions()
