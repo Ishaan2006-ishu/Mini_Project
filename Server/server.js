@@ -5,6 +5,7 @@ require("dotenv").config()
 const Session = require("./models/session")
 const Question = require("./models/question")
 const authRoutes = require("./routes/authRoutes")
+const authMiddleware = require("./middleware/authMiddleware")
 
 const app = express()
 
@@ -42,7 +43,7 @@ app.get("/api/question", async (req, res) => {
 })
 
 
-app.post("/api/answer", async (req,res)=>{
+app.post("/api/answer", authMiddleware, async (req,res)=>{
 
  const { role, question, answer } = req.body
 
@@ -50,6 +51,7 @@ app.post("/api/answer", async (req,res)=>{
  const feedback = "Good explanation but add examples"
 
  const session = new Session({
+   userId: req.user.userId,
    role,
    question,
    answer,
@@ -63,6 +65,15 @@ app.post("/api/answer", async (req,res)=>{
    score,
    feedback
  })
+
+})
+app.get("/api/history", authMiddleware, async (req,res)=>{
+
+ const userId = req.user.userId
+
+ const sessions = await Session.find({ userId })
+
+ res.json(sessions)
 
 })
 
