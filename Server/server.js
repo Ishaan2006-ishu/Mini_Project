@@ -4,11 +4,13 @@ const cors = require("cors")
 require("dotenv").config()
 const Session = require("./models/session")
 const Question = require("./models/question")
+const authRoutes = require("./routes/authRoutes")
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.use("/api", authRoutes)
 
 
 mongoose.connect(process.env.MONGO_URI)
