@@ -40,7 +40,7 @@ app.get("/api/question", async (req, res) => {
    question: randomQuestion.question
  })
 
-})
+}) 
 
 
 app.post("/api/answer", authMiddleware, async (req,res)=>{
