@@ -195,14 +195,14 @@
 //         </div>
 
 //         {/* Bottom stat strip */}
-//         {/* <div style={{ position: "relative", zIndex: 10, display: "flex", gap: 40 }}>
+//         <div style={{ position: "relative", zIndex: 10, display: "flex", gap: 40 }}>
 //           {[["12K+", "Interviews"], ["94%", "Success Rate"], ["50+", "Job Roles"]].map(([val, label]) => (
 //             <div key={label}>
 //               <div style={{ fontFamily: "Space Mono", fontWeight: 700, fontSize: 22, color: "white" }}>{val}</div>
 //               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{label}</div>
 //             </div>
 //           ))}
-//         </div> */}
+//         </div>
 //       </div>
 
 //       {/* RIGHT PANEL — Login Form */}
@@ -481,7 +481,7 @@ export default function Login() {
 
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/login", {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
