@@ -30,7 +30,7 @@ export default function Register() {
         headers:{"Content-Type":"application/json"},
       
         body:JSON.stringify({
-        fullName:form.fullName,
+        name:form.fullName,
         email:form.email,
         password:form.password,
         }),
