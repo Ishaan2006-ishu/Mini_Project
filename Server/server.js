@@ -93,4 +93,4 @@ const seedQuestions = async () => {
 
 }
 
-// seedQuestions()
+seedQuestions()

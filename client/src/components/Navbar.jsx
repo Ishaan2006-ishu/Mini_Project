@@ -10,7 +10,7 @@ export default function Navbar() {
     navigate("/login");
   };
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+ const user = JSON.parse(localStorage.getItem("user") || "null") || {};
 
   return (
     <nav className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">

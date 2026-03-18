@@ -497,7 +497,11 @@ export default function Login() {
       } else {
         // Save token to localStorage
         localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+if (data.user) {
+  localStorage.setItem("user", JSON.stringify(data.user));
+} else {
+  localStorage.setItem("user", JSON.stringify({ name: data.name || "" }));
+}
 
         console.log("Login successful", data);
 
