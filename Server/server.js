@@ -1,7 +1,8 @@
 const express = require("express")
 const mongoose = require("mongoose")
 const cors = require("cors")
-require("dotenv").config()
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const Session = require("./models/session")
 const Question = require("./models/question")
 const authRoutes = require("./routes/authRoutes")
