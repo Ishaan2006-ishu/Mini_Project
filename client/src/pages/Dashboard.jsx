@@ -26,6 +26,8 @@ const Dashboard = () => {
   const recent = history.slice(0, 5)
 
   const diffColor = { easy: 'bg-green-100 text-green-700', medium: 'bg-yellow-100 text-yellow-700', hard: 'bg-red-100 text-red-700' }
+  const typeColor = { practice: 'bg-emerald-100 text-emerald-700', interview: 'bg-indigo-100 text-indigo-700' }
+  const getSessionType = (session) => (session?.type === 'practice' ? 'practice' : 'interview')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,7 +63,7 @@ const Dashboard = () => {
         </div>
 
         {/* CTA */}
-        <div className="relative bg-indigo-600 rounded-2xl p-6 mb-7 overflow-hidden">
+        <div className="relative bg-indigo-600 rounded-2xl p-6 mb-4 overflow-hidden shadow-lg shadow-indigo-600/20">
           <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full bg-white/5" />
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -69,8 +71,24 @@ const Dashboard = () => {
               <p className="text-white/70 text-sm">Select a role — AI generates fresh questions just for you.</p>
             </div>
             <button onClick={() => navigate('/role-select')}
-              className="flex-shrink-0 bg-white text-indigo-600 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-indigo-50 transition-colors whitespace-nowrap">
+              className="flex-shrink-0 bg-white text-indigo-600 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-indigo-50 transition-colors whitespace-nowrap shadow-sm">
               Start Interview →
+            </button>
+          </div>
+        </div>
+
+        {/* Practice Test CTA */}
+        <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 mb-7 overflow-hidden shadow-lg shadow-teal-500/20">
+          <div className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full bg-white/10" />
+          <div className="absolute right-12 top-4 w-12 h-12 rounded-full bg-white/10 blur-xl" />
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-white font-bold text-base mb-1">Take a Practice Test (MCQs)</h2>
+              <p className="text-white/80 text-sm">Test your knowledge with AI-generated multiple choice questions.</p>
+            </div>
+            <button onClick={() => navigate('/practice-select')}
+              className="flex-shrink-0 bg-white text-teal-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-teal-50 transition-colors whitespace-nowrap shadow-sm">
+              Start Practice →
             </button>
           </div>
         </div>
@@ -108,6 +126,7 @@ const Dashboard = () => {
                   <p className="font-semibold text-gray-900 text-sm capitalize">{s.role}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`badge capitalize ${diffColor[s.difficulty] || 'bg-gray-100 text-gray-600'}`}>{s.difficulty}</span>
+                    <span className={`badge capitalize ${typeColor[getSessionType(s)]}`}>{getSessionType(s)}</span>
                     <span className="text-xs text-gray-400">{new Date(s.completedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
                 </div>

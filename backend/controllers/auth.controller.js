@@ -3,15 +3,19 @@ const bcrypt         = require('bcryptjs');
 const User           = require('../models/User');
 const Otp            = require('../models/Otp');
 const { sendOtpEmail } = require('../utils/sendEmail');
+const { AUTH_CONSTANTS, APP_CONSTANTS } = require('../utils/constants');
 
 // Helper — generate 6-digit OTP
-const generateOtp = () =>
-  Math.floor(100000 + Math.random() * 900000).toString();
+const generateOtp = () => {
+  const min = 10 ** (AUTH_CONSTANTS.OTP_LENGTH - 1);
+  const max = (10 ** AUTH_CONSTANTS.OTP_LENGTH) - 1;
+  return Math.floor(min + Math.random() * (max - min + 1)).toString();
+};
 
 // Helper — generate signed JWT
 const generateToken = (userId) =>
   jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: APP_CONSTANTS.JWT_EXPIRES_IN,
   });
 
 
@@ -56,7 +60,7 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    const salt           = await bcrypt.genSalt(10);
+    const salt           = await bcrypt.genSalt(AUTH_CONSTANTS.BCRYPT_SALT_ROUNDS);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const otp = generateOtp();
@@ -103,7 +107,7 @@ exports.verifyOtp = async (req, res, next) => {
       });
     }
 
-    if (otpRecord.attempts >= 5) {
+    if (otpRecord.attempts >= AUTH_CONSTANTS.OTP_MAX_ATTEMPTS) {
       await Otp.deleteOne({ _id: otpRecord._id });
       return res.status(429).json({
         success: false,
@@ -113,7 +117,7 @@ exports.verifyOtp = async (req, res, next) => {
 
     if (otpRecord.otp !== otp.toString().trim()) {
       await Otp.findByIdAndUpdate(otpRecord._id, { $inc: { attempts: 1 } });
-      const remaining = 4 - otpRecord.attempts;
+      const remaining = Math.max(AUTH_CONSTANTS.OTP_MAX_ATTEMPTS - (otpRecord.attempts + 1), 0);
       return res.status(400).json({
         success: false,
         message: `Incorrect OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,

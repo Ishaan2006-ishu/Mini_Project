@@ -20,6 +20,8 @@ const History = () => {
 
   const filtered = filter === 'all' ? sessions : sessions.filter(s => s.difficulty === filter)
   const dc = { easy: 'bg-green-100 text-green-700', medium: 'bg-yellow-100 text-yellow-700', hard: 'bg-red-100 text-red-700' }
+  const tc = { practice: 'bg-emerald-100 text-emerald-700', interview: 'bg-indigo-100 text-indigo-700' }
+  const getSessionType = (session) => (session?.type === 'practice' ? 'practice' : 'interview')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,6 +68,7 @@ const History = () => {
                   <p className="font-semibold text-gray-900 text-sm capitalize">{s.role}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`badge capitalize ${dc[s.difficulty] || 'bg-gray-100 text-gray-600'}`}>{s.difficulty}</span>
+                    <span className={`badge capitalize ${tc[getSessionType(s)]}`}>{getSessionType(s)}</span>
                     <span className="text-xs text-gray-400">
                       {new Date(s.completedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>

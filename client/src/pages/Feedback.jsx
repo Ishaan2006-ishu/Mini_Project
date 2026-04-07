@@ -19,7 +19,7 @@ const FeedBack = () => {
         .catch(() => navigate('/history'))
         .finally(() => setLoading(false))
     }
-  }, [])
+  }, [id, navigate, result])
 
   if (loading) return <Loader text="Loading feedback..." />
   if (!result) return null
@@ -27,6 +27,13 @@ const FeedBack = () => {
   const s = result.overallScore || 0
   const scoreColor = s >= 7 ? 'text-green-600' : s >= 5 ? 'text-yellow-600' : 'text-red-500'
   const scoreBg    = s >= 7 ? 'border-green-200 bg-green-50' : s >= 5 ? 'border-yellow-200 bg-yellow-50' : 'border-red-200 bg-red-50'
+  const getQuestionText = (q) => q.questionText || q.question || 'Question'
+  const getDisplayAnswer = (q) => {
+    if (!q.userAnswer) return null
+    if (!Array.isArray(q.options)) return q.userAnswer
+    const matched = q.options.find((option) => option.startsWith(`${q.userAnswer}.`))
+    return matched || q.userAnswer
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -70,7 +77,7 @@ const FeedBack = () => {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5 flex-1 min-w-0">
                   <div className="w-6 h-6 bg-gray-100 rounded-md flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5">{i + 1}</div>
-                  <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                  <p className="text-sm font-medium text-gray-800 leading-snug">{getQuestionText(q)}</p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className={`font-bold text-base ${q.score >= 7 ? 'text-green-600' : q.score >= 5 ? 'text-yellow-600' : 'text-red-500'}`}>{q.score ?? '—'}/10</span>
@@ -83,12 +90,12 @@ const FeedBack = () => {
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Your Answer</p>
                     <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-3">
-                      {q.userAnswer || <span className="italic text-gray-400">No answer provided</span>}
+                      {getDisplayAnswer(q) || <span className="italic text-gray-400">No answer provided</span>}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">AI Feedback</p>
-                    <p className="text-sm text-gray-700 leading-relaxed bg-indigo-50 rounded-xl p-3">{q.feedback || '—'}</p>
+                    <p className="text-sm text-gray-700 leading-relaxed bg-indigo-50 rounded-xl p-3">{q.feedback || q.explanation || '—'}</p>
                   </div>
                 </div>
               )}

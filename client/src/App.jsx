@@ -7,6 +7,7 @@ import Register   from './pages/Register'
 import VerifyOtp  from './pages/VerifyOtp'
 import Dashboard  from './pages/Dashboard'
 import RoleSelect from './pages/RoleSelect'
+import PracticeSelect from './pages/PracticeSelect'
 import Session    from './pages/Session'
 import FeedBack   from './pages/Feedback'
 import History    from './pages/History'
@@ -24,6 +25,7 @@ const App = () => (
       <Route path="/verify-otp"  element={<VerifyOtp />} />
       <Route path="/dashboard"   element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/role-select" element={<ProtectedRoute><RoleSelect /></ProtectedRoute>} />
+      <Route path="/practice-select" element={<ProtectedRoute><PracticeSelect /></ProtectedRoute>} />
       <Route path="/session/:id" element={<ProtectedRoute><Session /></ProtectedRoute>} />
       <Route path="/feedback/:id" element={<ProtectedRoute><FeedBack /></ProtectedRoute>} />
       <Route path="/history"     element={<ProtectedRoute><History /></ProtectedRoute>} />

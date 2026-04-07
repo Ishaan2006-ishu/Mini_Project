@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { AUTH_CONSTANTS } = require('../utils/constants');
 
 const OtpSchema = new mongoose.Schema({
   email: {
@@ -21,12 +22,12 @@ const OtpSchema = new mongoose.Schema({
   },
   attempts: {
     type: Number,
-    default: 0,         // track wrong attempts (max 5)
+    default: 0,
   },
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 600,       // ← TTL: MongoDB auto-deletes this doc after 10 minutes
+    expires: AUTH_CONSTANTS.OTP_EXPIRY_SECONDS,
   },
 });
 

@@ -1,18 +1,22 @@
 const express   = require('express');
 const cors      = require('cors');
 const dotenv    = require('dotenv');
-const connectDB = require('./config/db');
-
 dotenv.config();
+
+const connectDB = require('./config/db');
+const { APP_CONSTANTS } = require('./utils/constants');
 connectDB();
 
 const app = express();
 
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin: APP_CONSTANTS.CORS_ORIGIN,
+  credentials: true,
+}));
 app.use(express.json());
 
-// Only register and login routes for now
 app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/sessions', require('./routes/session.routes'));
 
 
 

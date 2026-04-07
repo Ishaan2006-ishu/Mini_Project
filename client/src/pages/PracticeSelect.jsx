@@ -12,7 +12,7 @@ const DIFFS = [
 
 const COUNTS = [20, 25, 30]
 
-const RoleSelect = () => {
+const PracticeSelect = () => {
   const navigate = useNavigate()
   const [roles, setRoles]     = useState([])
   const [role, setRole]       = useState('')
@@ -40,9 +40,9 @@ const RoleSelect = () => {
         role,
         difficulty: diff,
         count: count,
-          type: 'practice',
+        type: 'practice'
       })
-      toast.success('Questions ready!')
+      toast.success('Practice questions ready!')
       navigate(`/session/${res.data.session.id}`, {
         state: {
           session: res.data.session,
@@ -59,11 +59,11 @@ const RoleSelect = () => {
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900">Configure your interview</h1>
-          <p className="text-sm text-gray-500 mt-1">Pick a role and difficulty — AI generates fresh questions instantly.</p>
+          <h1 className="text-xl font-bold text-gray-900">Configure your practice test</h1>
+          <p className="text-sm text-gray-500 mt-1">Pick a role and difficulty — AI generates fresh MCQs instantly.</p>
         </div>
 
-        <div className="card mb-4">
+        <div className="card mb-4 border-teal-100">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">1. Select Job Role</h2>
           {loading
             ? <div className="grid grid-cols-2 gap-2">{[...Array(8)].map((_, i) => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}</div>
@@ -74,7 +74,7 @@ const RoleSelect = () => {
                   return (
                   <button key={key} onClick={() => setRole(label)}
                     className={`px-3 py-2.5 rounded-lg text-sm font-medium border-2 text-left capitalize transition-all ${
-                      role === label ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-300'
+                      role === label ? 'border-teal-500 bg-teal-600 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-teal-300'
                     }`}>{label}
                   </button>
                 )})}
@@ -82,7 +82,7 @@ const RoleSelect = () => {
           }
         </div>
 
-        <div className="card mb-4">
+        <div className="card mb-4 border-teal-100">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">2. Difficulty Level</h2>
           <div className="grid grid-cols-3 gap-3">
             {DIFFS.map(d => (
@@ -95,13 +95,13 @@ const RoleSelect = () => {
           </div>
         </div>
 
-        <div className="card mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">3. Number of Questions</h2>
+        <div className="card mb-6 border-teal-100">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">3. Number of Questions (MCQs)</h2>
           <div className="grid grid-cols-3 gap-3">
             {COUNTS.map((cVal) => (
               <button key={cVal} onClick={() => setCount(cVal)}
                 className={`py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${
-                  count === cVal ? 'border-indigo-500 bg-indigo-600 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-300'
+                  count === cVal ? 'border-teal-500 bg-teal-600 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-teal-300'
                 }`}>
                 {cVal} questions
               </button>
@@ -110,21 +110,21 @@ const RoleSelect = () => {
         </div>
 
         {role && (
-          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3.5 mb-4">
-            <p className="text-sm text-indigo-700">
-              <span className="font-semibold">{diff}-level</span> interview for <span className="font-semibold capitalize">{role}</span> with <span className="font-semibold">{count} questions</span>
+          <div className="bg-teal-50 border border-teal-200 rounded-xl p-3.5 mb-4">
+            <p className="text-sm text-teal-800">
+              <span className="font-semibold">{diff}-level</span> practice test for <span className="font-semibold capitalize">{role}</span> with <span className="font-semibold">{count} questions</span>
             </p>
           </div>
         )}
 
-        <button onClick={handleStart} disabled={!role || starting} className="btn-primary">
+        <button onClick={handleStart} disabled={!role || starting} className="btn-primary w-full bg-teal-600 hover:bg-teal-700 focus:ring-teal-500">
           {starting
-            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating questions...</>
-            : 'Start Interview →'
+            ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block align-middle mr-2" />Generating questions...</>
+            : 'Start Practice Test →'
           }
         </button>
       </div>
     </div>
   )
 }
-export default RoleSelect
+export default PracticeSelect
