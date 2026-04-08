@@ -1,9 +1,14 @@
+
+
+
+
 const jwt            = require('jsonwebtoken');
 const bcrypt         = require('bcryptjs');
 const User           = require('../models/User');
 const Otp            = require('../models/Otp');
 const { sendOtpEmail } = require('../utils/sendEmail');
 const { AUTH_CONSTANTS, APP_CONSTANTS } = require('../utils/constants');
+
 
 // Helper — generate 6-digit OTP
 const generateOtp = () => {
