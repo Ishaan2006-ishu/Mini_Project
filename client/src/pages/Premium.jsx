@@ -1,61 +1,40 @@
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-
-const plans = [
-  {
-    id: 'basic',
-    name: 'Basic',
-    price: '₹299',
-    period: '/month',
-    badge: null,
-    features: [
-      '5 scheduled interviews/month',
-      'Company-specific questions',
-      'AI feedback report',
-      'Email reminders',
-    ],
-    cta: 'Get Basic',
-    highlight: false,
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '₹599',
-    period: '/month',
-    badge: 'Most Popular',
-    features: [
-      'Unlimited scheduled interviews',
-      'Company-specific questions',
-      'Detailed AI feedback report',
-      'Email & SMS reminders',
-      'Resume-based questions',
-      'Priority support',
-    ],
-    cta: 'Get Pro',
-    highlight: true,
-  },
-  {
-    id: 'yearly',
-    name: 'Pro Yearly',
-    price: '₹4,999',
-    period: '/year',
-    badge: 'Best Value',
-    features: [
-      'Everything in Pro',
-      '2 months free',
-      'Exclusive company guides',
-      'Mock panel interviews',
-      'Career coaching session',
-    ],
-    cta: 'Get Yearly',
-    highlight: false,
-  },
-]
+import { planAPI } from '../services/api'
 
 const Premium = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { company, role, level } = location.state || {}
+  const { company, role } = location.state || {}
+  const [plans, setPlans] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadPlans = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const { data } = await planAPI.getPlans()
+        if (!mounted) return
+        setPlans(Array.isArray(data?.plans) ? data.plans : [])
+      } catch (err) {
+        if (!mounted) return
+        setError(err.response?.data?.message || 'Failed to load premium plans. Please try again.')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    loadPlans()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const handleUpgrade = (plan) => {
     // TODO: integrate with payment gateway (Razorpay / Stripe)
@@ -109,11 +88,21 @@ const Premium = () => {
           </p>
         </div>
 
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         {/* Plans */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
-          {plans.map(plan => (
+          {loading ? (
+            <div className="md:col-span-3 text-center py-10 text-sm text-gray-500">Loading plans...</div>
+          ) : plans.length === 0 ? (
+            <div className="md:col-span-3 text-center py-10 text-sm text-gray-500">No premium plans available.</div>
+          ) : plans.map(plan => (
             <div
-              key={plan.id}
+              key={plan.planId}
               className={`relative bg-white rounded-2xl border p-6 flex flex-col transition-all
                 ${plan.highlight
                   ? 'border-indigo-400 shadow-lg shadow-indigo-100 ring-2 ring-indigo-200'

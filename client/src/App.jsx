@@ -51,6 +51,7 @@ import FeedBack      from './pages/Feedback'
 import History       from './pages/History'
 import CompanyPrep   from './pages/CompanyPrep'   // ← NEW
 import Premium       from './pages/Premium'        // ← NEW
+import Profile       from './pages/Profile'
 
 const App = () => (
   <AuthProvider>
@@ -71,6 +72,7 @@ const App = () => (
       <Route path="/history"        element={<ProtectedRoute><History /></ProtectedRoute>} />
       <Route path="/company-prep"   element={<ProtectedRoute><CompanyPrep /></ProtectedRoute>} />  {/* ← NEW */}
       <Route path="/premium"        element={<ProtectedRoute><Premium /></ProtectedRoute>} />        {/* ← NEW */}
+      <Route path="/profile"        element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="*"               element={<Navigate to="/login" replace />} />
     </Routes>
   </AuthProvider>

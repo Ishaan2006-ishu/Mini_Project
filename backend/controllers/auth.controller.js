@@ -248,3 +248,41 @@ exports.getMe = async (req, res, next) => {
     next(err);
   }
 };
+
+
+// ── PATCH /api/auth/me ───────────────────────────────────
+exports.updateMe = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || name.trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name must be at least 2 characters',
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { name: name.trim() },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};

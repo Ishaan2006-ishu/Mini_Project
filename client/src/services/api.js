@@ -29,6 +29,7 @@ export const authAPI = {
   resendOtp: (email) => api.post('/auth/resend-otp', { email }),
   login:     (data)  => api.post('/auth/login', data),
   getMe:     ()      => api.get('/auth/me'),
+  updateMe:   (data)  => api.patch('/auth/me', data),
 }
 
 export const sessionAPI = {
@@ -37,6 +38,10 @@ export const sessionAPI = {
   getSession:    (id)          => api.get(`/sessions/${id}`),
   startSession:  (data)        => api.post('/sessions/start', data),
   submitSession: (id, answers) => api.post(`/sessions/${id}/submit`, { answers }),
+}
+
+export const planAPI = {
+  getPlans: () => api.get('/plans'),
 }
 
 export default api
