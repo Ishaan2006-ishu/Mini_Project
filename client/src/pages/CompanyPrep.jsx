@@ -1,119 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-
-const companies = [
-  {
-    id: 1,
-    name: 'Google',
-    logo: '🔵',
-    color: 'from-blue-50 to-indigo-50',
-    border: 'border-blue-100',
-    roles: [
-      { title: 'Software Engineer (SDE-1)', level: 'Entry', questions: 8 },
-      { title: 'Software Engineer (SDE-2)', level: 'Mid', questions: 10 },
-      { title: 'Senior Software Engineer', level: 'Senior', questions: 10 },
-      { title: 'Product Manager', level: 'Mid', questions: 8 },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Amazon',
-    logo: '🟠',
-    color: 'from-orange-50 to-amber-50',
-    border: 'border-orange-100',
-    roles: [
-      { title: 'SDE-1', level: 'Entry', questions: 8 },
-      { title: 'SDE-2', level: 'Mid', questions: 10 },
-      { title: 'SDE-3', level: 'Senior', questions: 10 },
-      { title: 'Data Engineer', level: 'Mid', questions: 8 },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Microsoft',
-    logo: '🟦',
-    color: 'from-sky-50 to-blue-50',
-    border: 'border-sky-100',
-    roles: [
-      { title: 'Software Engineer', level: 'Entry', questions: 8 },
-      { title: 'Senior SDE', level: 'Senior', questions: 10 },
-      { title: 'Cloud Architect', level: 'Senior', questions: 10 },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Meta',
-    logo: '🔷',
-    color: 'from-indigo-50 to-purple-50',
-    border: 'border-indigo-100',
-    roles: [
-      { title: 'Software Engineer E3', level: 'Entry', questions: 8 },
-      { title: 'Software Engineer E4', level: 'Mid', questions: 10 },
-      { title: 'Staff Engineer', level: 'Senior', questions: 10 },
-    ],
-  },
-  {
-    id: 5,
-    name: 'Apple',
-    logo: '⬛',
-    color: 'from-gray-50 to-slate-50',
-    border: 'border-gray-200',
-    roles: [
-      { title: 'iOS Developer', level: 'Mid', questions: 8 },
-      { title: 'macOS Engineer', level: 'Senior', questions: 10 },
-      { title: 'ML Engineer', level: 'Mid', questions: 8 },
-    ],
-  },
-  {
-    id: 6,
-    name: 'Netflix',
-    logo: '🔴',
-    color: 'from-red-50 to-rose-50',
-    border: 'border-red-100',
-    roles: [
-      { title: 'Senior Software Engineer', level: 'Senior', questions: 10 },
-      { title: 'Backend Engineer', level: 'Mid', questions: 8 },
-      { title: 'Data Scientist', level: 'Mid', questions: 8 },
-    ],
-  },
-  {
-    id: 7,
-    name: 'Flipkart',
-    logo: '🟡',
-    color: 'from-yellow-50 to-amber-50',
-    border: 'border-yellow-100',
-    roles: [
-      { title: 'SDE-1', level: 'Entry', questions: 8 },
-      { title: 'SDE-2', level: 'Mid', questions: 10 },
-      { title: 'Product Manager', level: 'Mid', questions: 8 },
-    ],
-  },
-  {
-    id: 8,
-    name: 'Infosys',
-    logo: '🟢',
-    color: 'from-emerald-50 to-teal-50',
-    border: 'border-emerald-100',
-    roles: [
-      { title: 'Systems Engineer', level: 'Entry', questions: 6 },
-      { title: 'Senior Systems Engineer', level: 'Mid', questions: 8 },
-      { title: 'Technology Analyst', level: 'Mid', questions: 8 },
-    ],
-  },
-  {
-    id: 9,
-    name: 'TCS',
-    logo: '🔵',
-    color: 'from-blue-50 to-cyan-50',
-    border: 'border-blue-100',
-    roles: [
-      { title: 'Assistant System Engineer', level: 'Entry', questions: 6 },
-      { title: 'IT Analyst', level: 'Mid', questions: 8 },
-      { title: 'Technical Lead', level: 'Senior', questions: 10 },
-    ],
-  },
-]
+import { companyAPI } from '../services/api'
 
 const levelColor = {
   Entry:  'bg-emerald-100 text-emerald-700',
@@ -123,8 +11,36 @@ const levelColor = {
 
 const CompanyPrep = () => {
   const navigate = useNavigate()
+  const [companies, setCompanies] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadCompanies = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const { data } = await companyAPI.getCompanies()
+        if (!mounted) return
+        setCompanies(Array.isArray(data?.companies) ? data.companies : [])
+      } catch (err) {
+        if (!mounted) return
+        setError(err.response?.data?.message || 'Failed to load companies. Please try again.')
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    loadCompanies()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const filtered = companies.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase())
@@ -190,8 +106,16 @@ const CompanyPrep = () => {
           </button>
         </div>
 
+        {error && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         {/* Cards Grid */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16 text-gray-400 text-sm">Loading companies...</div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-gray-400 text-sm">No companies found.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

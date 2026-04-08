@@ -1,4 +1,5 @@
 const Role = require('../models/Role');
+const InterviewConfig = require('../models/InterviewConfig');
 
 const DEFAULT_ROLES = [
 	{ name: 'Frontend Developer', slug: 'frontend-developer', sortOrder: 1 },
@@ -17,6 +18,24 @@ const bootstrapRolesIfEmpty = async () => {
 	await Role.insertMany(DEFAULT_ROLES);
 };
 
+const DEFAULT_INTERVIEW_CONFIG = {
+  key: 'default',
+  difficulties: [
+    { value: 'easy', label: 'Easy', description: 'Beginner level', sortOrder: 1 },
+    { value: 'medium', label: 'Medium', description: 'Intermediate level', sortOrder: 2 },
+    { value: 'hard', label: 'Hard', description: 'Advanced level', sortOrder: 3 },
+  ],
+  questionCounts: [20, 25, 30],
+  defaultDifficulty: 'medium',
+  defaultQuestionCount: 25,
+};
+
+const bootstrapInterviewConfigIfMissing = async () => {
+  const existing = await InterviewConfig.findOne({ key: 'default' });
+  if (existing) return;
+  await InterviewConfig.create(DEFAULT_INTERVIEW_CONFIG);
+};
+
 // GET /api/sessions/roles
 exports.getRoles = async (req, res, next) => {
 	try {
@@ -33,6 +52,42 @@ exports.getRoles = async (req, res, next) => {
 	} catch (err) {
 		next(err);
 	}
+};
+
+// GET /api/sessions/config
+exports.getSessionConfig = async (req, res, next) => {
+  try {
+    await bootstrapInterviewConfigIfMissing();
+
+    const config = await InterviewConfig.findOne({ key: 'default' })
+      .select('difficulties questionCounts defaultDifficulty defaultQuestionCount -_id');
+
+    const difficulties = (config?.difficulties || [])
+      .filter((item) => item.isActive !== false)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      .map((item) => ({
+        value: item.value,
+        label: item.label,
+        description: item.description,
+      }));
+
+    const questionCounts = [...(config?.questionCounts || [])]
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .sort((a, b) => a - b);
+
+    res.status(200).json({
+      success: true,
+      config: {
+        difficulties,
+        questionCounts,
+        defaultDifficulty: config?.defaultDifficulty || 'medium',
+        defaultQuestionCount: Number(config?.defaultQuestionCount) || 25,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 const Session = require('../models/Session');

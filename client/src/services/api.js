@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5800/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -34,6 +34,7 @@ export const authAPI = {
 
 export const sessionAPI = {
   getRoles:      ()            => api.get('/sessions/roles'),
+  getConfig:     ()            => api.get('/sessions/config'),
   getHistory:    ()            => api.get('/sessions/history'),
   getSession:    (id)          => api.get(`/sessions/${id}`),
   startSession:  (data)        => api.post('/sessions/start', data),
@@ -42,6 +43,10 @@ export const sessionAPI = {
 
 export const planAPI = {
   getPlans: () => api.get('/plans'),
+}
+
+export const companyAPI = {
+  getCompanies: () => api.get('/companies'),
 }
 
 export default api

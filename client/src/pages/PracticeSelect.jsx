@@ -4,17 +4,17 @@ import { sessionAPI } from '../services/api'
 import Navbar from '../components/Navbar'
 import toast from 'react-hot-toast'
 
-const DIFFS = [
-  { v: 'easy',   label: 'Easy',   desc: 'Beginner level',     c: 'border-green-400 bg-green-50 text-green-700'    },
-  { v: 'medium', label: 'Medium', desc: 'Intermediate level', c: 'border-yellow-400 bg-yellow-50 text-yellow-700' },
-  { v: 'hard',   label: 'Hard',   desc: 'Advanced level',     c: 'border-red-400 bg-red-50 text-red-700'          },
-]
-
-const COUNTS = [20, 25, 30]
+const DIFF_STYLES = {
+  easy: 'border-green-400 bg-green-50 text-green-700',
+  medium: 'border-yellow-400 bg-yellow-50 text-yellow-700',
+  hard: 'border-red-400 bg-red-50 text-red-700',
+}
 
 const PracticeSelect = () => {
   const navigate = useNavigate()
   const [roles, setRoles]     = useState([])
+  const [diffs, setDiffs]     = useState([])
+  const [counts, setCounts]   = useState([])
   const [role, setRole]       = useState('')
   const [diff, setDiff]       = useState('medium')
   const [count, setCount]     = useState(25)
@@ -26,9 +26,21 @@ const PracticeSelect = () => {
 
   useEffect(() => {
     setLoading(true)
-    sessionAPI.getRoles()
-      .then(r => setRoles(r.data.roles || []))
-      .catch(() => toast.error('Failed to load roles'))
+    Promise.all([sessionAPI.getRoles(), sessionAPI.getConfig()])
+      .then(([rolesRes, configRes]) => {
+        const nextRoles = rolesRes.data.roles || []
+        const config = configRes.data?.config || {}
+        const nextDiffs = Array.isArray(config.difficulties) ? config.difficulties : []
+        const nextCounts = Array.isArray(config.questionCounts) ? config.questionCounts : []
+
+        setRoles(nextRoles)
+        setDiffs(nextDiffs)
+        setCounts(nextCounts)
+
+        if (config.defaultDifficulty) setDiff(config.defaultDifficulty)
+        if (config.defaultQuestionCount) setCount(Number(config.defaultQuestionCount))
+      })
+      .catch(() => toast.error('Failed to load practice config'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -85,11 +97,11 @@ const PracticeSelect = () => {
         <div className="card mb-4 border-teal-100">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">2. Difficulty Level</h2>
           <div className="grid grid-cols-3 gap-3">
-            {DIFFS.map(d => (
-              <button key={d.v} onClick={() => setDiff(d.v)}
-                className={`p-3.5 rounded-xl border-2 text-left transition-all ${diff === d.v ? d.c : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'}`}>
+            {diffs.map((d) => (
+              <button key={d.value} onClick={() => setDiff(d.value)}
+                className={`p-3.5 rounded-xl border-2 text-left transition-all ${diff === d.value ? (DIFF_STYLES[d.value] || 'border-teal-400 bg-teal-50 text-teal-700') : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'}`}>
                 <div className="font-semibold text-sm">{d.label}</div>
-                <div className="text-xs opacity-70 mt-0.5">{d.desc}</div>
+                <div className="text-xs opacity-70 mt-0.5">{d.description}</div>
               </button>
             ))}
           </div>
@@ -98,7 +110,7 @@ const PracticeSelect = () => {
         <div className="card mb-6 border-teal-100">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">3. Number of Questions (MCQs)</h2>
           <div className="grid grid-cols-3 gap-3">
-            {COUNTS.map((cVal) => (
+            {counts.map((cVal) => (
               <button key={cVal} onClick={() => setCount(cVal)}
                 className={`py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${
                   count === cVal ? 'border-teal-500 bg-teal-600 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-teal-300'
