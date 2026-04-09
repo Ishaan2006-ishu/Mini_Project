@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { planAPI } from '../services/api'
+import toast from 'react-hot-toast'
+import { planAPI, paymentAPI } from '../services/api'
 
 const Premium = () => {
   const navigate = useNavigate()
@@ -10,6 +11,7 @@ const Premium = () => {
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [processingPlanId, setProcessingPlanId] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -36,9 +38,85 @@ const Premium = () => {
     }
   }, [])
 
-  const handleUpgrade = (plan) => {
-    // TODO: integrate with payment gateway (Razorpay / Stripe)
-    alert(`Payment flow for "${plan.name}" plan — integrate Razorpay here.`)
+  const loadRazorpayScript = () => new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true)
+
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+
+  const handleUpgrade = async (plan) => {
+    const key = import.meta.env.VITE_RAZORPAY_KEY_ID
+    if (!key) {
+      toast.error('Razorpay key is missing. Set VITE_RAZORPAY_KEY_ID in client .env.')
+      return
+    }
+
+    try {
+      setProcessingPlanId(plan.planId)
+
+      const scriptLoaded = await loadRazorpayScript()
+      if (!scriptLoaded) {
+        throw new Error('Failed to load Razorpay checkout script')
+      }
+
+      const { data } = await paymentAPI.createOrder({ planId: plan.planId })
+      const order = data?.order
+
+      if (!order?.id) {
+        throw new Error('Order was not created')
+      }
+
+      const options = {
+        key: data.keyId || key,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'MockMate Pro',
+        description: `${plan.name} plan`,
+        order_id: order.id,
+        prefill: {
+          name: JSON.parse(localStorage.getItem('mm_user') || '{}')?.name || '',
+          email: JSON.parse(localStorage.getItem('mm_user') || '{}')?.email || '',
+        },
+        theme: {
+          color: '#4f46e5',
+        },
+        handler: async (response) => {
+          try {
+            const verifyRes = await paymentAPI.verifyPayment({
+              ...response,
+              planId: plan.planId,
+            })
+
+            if (verifyRes.data?.success) {
+              toast.success(`${plan.name} purchased successfully`)
+            } else {
+              toast.error('Payment verification failed')
+            }
+          } catch (verifyErr) {
+            toast.error(verifyErr.response?.data?.message || 'Payment verification failed')
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            toast('Payment cancelled')
+          },
+        },
+      }
+
+      const razorpay = new window.Razorpay(options)
+      razorpay.on('payment.failed', (response) => {
+        toast.error(response?.error?.description || 'Payment failed in test mode')
+      })
+      razorpay.open()
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to start payment')
+    } finally {
+      setProcessingPlanId('')
+    }
   }
 
   return (
@@ -139,12 +217,14 @@ const Premium = () => {
 
               <button
                 onClick={() => handleUpgrade(plan)}
+                disabled={processingPlanId === plan.planId}
                 className={`w-full py-2.5 rounded-xl text-sm font-bold transition-colors
+                  disabled:opacity-60 disabled:cursor-not-allowed
                   ${plan.highlight
                     ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                     : 'bg-gray-100 text-gray-800 hover:bg-indigo-50 hover:text-indigo-700'}`}
               >
-                {plan.cta}
+                {processingPlanId === plan.planId ? 'Processing...' : plan.cta}
               </button>
             </div>
           ))}

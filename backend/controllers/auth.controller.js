@@ -225,7 +225,7 @@ exports.login = async (req, res, next) => {
       success: true,
       message: 'Login successful',
       token,
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, isPremium: user.isPremium },
     });
   } catch (err) {
     next(err);
@@ -242,7 +242,13 @@ exports.getMe = async (req, res, next) => {
     }
     res.status(200).json({
       success: true,
-      user: { id: user._id, name: user.name, email: user.email, createdAt: user.createdAt },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        isPremium: user.isPremium,
+        createdAt: user.createdAt,
+      },
     });
   } catch (err) {
     next(err);
@@ -279,6 +285,7 @@ exports.updateMe = async (req, res, next) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        isPremium: user.isPremium,
         createdAt: user.createdAt,
       },
     });

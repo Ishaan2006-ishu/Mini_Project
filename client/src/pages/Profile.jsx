@@ -74,6 +74,19 @@ const Profile = () => {
               <div>
                 <h2 className="text-lg font-bold text-gray-900">{stats?.name || 'User'}</h2>
                 <p className="text-sm text-gray-500">{stats?.email}</p>
+                <div className="mt-2">
+                  {stats?.isPremium ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-xs font-semibold border border-amber-200">
+                      <span>⭐</span>
+                      Premium Member
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 text-gray-700 px-2.5 py-1 text-xs font-semibold border border-gray-200">
+                      <span>•</span>
+                      Free Profile
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -101,6 +114,18 @@ const Profile = () => {
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-gray-500">Email</span>
                   <span className="font-medium text-gray-900 text-right break-all">{stats?.email}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-gray-500">Plan</span>
+                  {stats?.isPremium ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 text-xs font-semibold border border-amber-200">
+                      ⭐ Premium
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 text-gray-700 px-2 py-0.5 text-xs font-semibold border border-gray-200">
+                      Free
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-gray-500">Joined</span>

@@ -112,7 +112,6 @@ const normalizeQuestion = (q, idx) => {
 
 const MODEL_CANDIDATES = [
 	process.env.GEMINI_MODEL,
-	'gemini-3-flash-preview',
 	'gemini-2.0-flash',
 	'gemini-1.5-flash',
 	'gemini-flash-latest',
@@ -168,7 +167,7 @@ const callGeminiWithModel = async ({ apiKey, model, prompt }) => {
 };
 
 const generateMcqQuestions = async ({ role, difficulty = 'medium', count = 5 }) => {
-	const safeCount = Math.max(1, Math.min(Number(count) || 5, 30));
+	const safeCount = Math.max(1, Math.min(Number(count)  ));
 	const apiKey = process.env.GEMINI_API_KEY;
 
 	if (!apiKey) {
@@ -191,8 +190,7 @@ const generateMcqQuestions = async ({ role, difficulty = 'medium', count = 5 }) 
 				break;
 			} catch (error) {
 				lastError = error;
-				// Continue trying other models for model-not-found or quota/rate issues.
-				if (![404, 429].includes(error?.status)) {
+				if (error?.status !== 404) {
 					break;
 				}
 			}

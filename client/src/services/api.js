@@ -49,4 +49,9 @@ export const companyAPI = {
   getCompanies: () => api.get('/companies'),
 }
 
+export const paymentAPI = {
+  createOrder: (data) => api.post('/payments/create-order', data),
+  verifyPayment: (data) => api.post('/payments/verify', data),
+}
+
 export default api

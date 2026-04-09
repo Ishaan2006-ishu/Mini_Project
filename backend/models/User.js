@@ -21,6 +21,11 @@ const UserSchema = new mongoose.Schema(
       required: [true, 'Password is required'],
       select: false,
     },
+    isPremium: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true }
 );
