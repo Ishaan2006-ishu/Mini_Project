@@ -20,6 +20,12 @@ const OtpSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  purpose: {
+    type: String,
+    enum: ['registration', 'reset_password'],
+    default: 'registration',
+    index: true,
+  },
   attempts: {
     type: Number,
     default: 0,

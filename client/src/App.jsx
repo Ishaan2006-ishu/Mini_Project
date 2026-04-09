@@ -41,6 +41,7 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login         from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
 import Register      from './pages/Register'
 import VerifyOtp     from './pages/VerifyOtp'
 import Dashboard     from './pages/Dashboard'
@@ -62,6 +63,7 @@ const App = () => (
     <Routes>
       <Route path="/"               element={<Navigate to="/login" replace />} />
       <Route path="/login"          element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/register"       element={<Register />} />
       <Route path="/verify-otp"     element={<VerifyOtp />} />
       <Route path="/dashboard"      element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

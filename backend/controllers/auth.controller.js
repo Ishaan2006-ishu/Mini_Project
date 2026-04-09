@@ -70,7 +70,7 @@ exports.register = async (req, res, next) => {
 
     const otp = generateOtp();
 
-    await Otp.deleteMany({ email: email.toLowerCase() });
+    await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'registration' });
 
     await Otp.create({
       email:    email.toLowerCase(),
@@ -103,7 +103,7 @@ exports.verifyOtp = async (req, res, next) => {
       });
     }
 
-    const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
+    const otpRecord = await Otp.findOne({ email: email.toLowerCase(), purpose: 'registration' });
 
     if (!otpRecord) {
       return res.status(400).json({
@@ -161,7 +161,7 @@ exports.resendOtp = async (req, res, next) => {
       });
     }
 
-    const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
+    const otpRecord = await Otp.findOne({ email: email.toLowerCase(), purpose: 'registration' });
     if (!otpRecord) {
       return res.status(400).json({
         success: false,
@@ -171,12 +171,13 @@ exports.resendOtp = async (req, res, next) => {
 
     const newOtp = generateOtp();
 
-    await Otp.deleteOne({ email: email.toLowerCase() });
+    await Otp.deleteOne({ email: email.toLowerCase(), purpose: 'registration' });
     await Otp.create({
       email:    otpRecord.email,
       name:     otpRecord.name,
       password: otpRecord.password,
       otp:      newOtp,
+      purpose:  'registration',
     });
 
     await sendOtpEmail(otpRecord.email, otpRecord.name, newOtp);
@@ -184,6 +185,125 @@ exports.resendOtp = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: `New OTP sent to ${email}.`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// ── POST /api/auth/forgot-password ────────────────────────
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email is required',
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with this email',
+      });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Account password is missing. Please login support or reset your account.',
+      });
+    }
+
+    const otp = generateOtp();
+
+    await Otp.deleteMany({ email: email.toLowerCase(), purpose: 'reset_password' });
+    await Otp.create({
+      email: email.toLowerCase(),
+      name: user.name,
+      password: user.password, // keep existing password as placeholder
+      otp,
+      purpose: 'reset_password',
+    });
+
+    await sendOtpEmail(user.email, user.name, otp);
+
+    res.status(200).json({
+      success: true,
+      message: `Password reset OTP sent to ${user.email}`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// ── POST /api/auth/reset-password ────────────────────────
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    if (!email || !otp || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, OTP and new password are required',
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters',
+      });
+    }
+
+    const otpRecord = await Otp.findOne({
+      email: email.toLowerCase(),
+      purpose: 'reset_password',
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset OTP expired or not found. Please request again.',
+      });
+    }
+
+    if (otpRecord.attempts >= AUTH_CONSTANTS.OTP_MAX_ATTEMPTS) {
+      await Otp.deleteOne({ _id: otpRecord._id });
+      return res.status(429).json({
+        success: false,
+        message: 'Too many wrong attempts. Please request a new reset OTP.',
+      });
+    }
+
+    if (otpRecord.otp !== otp.toString().trim()) {
+      await Otp.findByIdAndUpdate(otpRecord._id, { $inc: { attempts: 1 } });
+      const remaining = Math.max(AUTH_CONSTANTS.OTP_MAX_ATTEMPTS - (otpRecord.attempts + 1), 0);
+      return res.status(400).json({
+        success: false,
+        message: `Incorrect OTP. ${remaining} attempt${remaining !== 1 ? 's' : ''} remaining.`,
+      });
+    }
+
+    const salt = await bcrypt.genSalt(AUTH_CONSTANTS.BCRYPT_SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await User.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      { password: hashedPassword },
+      { runValidators: true }
+    );
+
+    await Otp.deleteOne({ _id: otpRecord._id });
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully. Please login with your new password.',
     });
   } catch (err) {
     next(err);
