@@ -1,16 +1,6 @@
 const Role = require('../models/Role');
 const InterviewConfig = require('../models/InterviewConfig');
 
-const DEFAULT_ROLES = [
-	{ name: 'Frontend Developer', slug: 'frontend-developer', sortOrder: 1 },
-	{ name: 'Backend Developer', slug: 'backend-developer', sortOrder: 2 },
-	{ name: 'Full Stack Developer', slug: 'full-stack-developer', sortOrder: 3 },
-	{ name: 'Data Analyst', slug: 'data-analyst', sortOrder: 4 },
-	{ name: 'Data Scientist', slug: 'data-scientist', sortOrder: 5 },
-	{ name: 'DevOps Engineer', slug: 'devops-engineer', sortOrder: 6 },
-	{ name: 'Product Manager', slug: 'product-manager', sortOrder: 7 },
-	{ name: 'UI UX Designer', slug: 'ui-ux-designer', sortOrder: 8 },
-];
 
 const bootstrapRolesIfEmpty = async () => {
 	const count = await Role.estimatedDocumentCount();
