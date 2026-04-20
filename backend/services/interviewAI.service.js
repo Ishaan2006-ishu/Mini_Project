@@ -4,7 +4,28 @@ const getClient = () =>
   new OpenAI({
     baseURL: process.env.OPENROUTER_API_URL,
     apiKey:  process.env.OPENROUTER_API_KEY,
+    defaultHeaders: {
+      'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'http://localhost:3000',
+      'X-Title': process.env.OPENROUTER_SITE_NAME || 'MockMate Pro',
+    },
   });
+
+const FALLBACK_QUESTIONS = {
+  easy: 'Can you explain the difference between a REST API and a GraphQL API with a simple example?',
+  medium: 'How would you design and implement authentication and authorization for a backend service used by mobile and web clients?',
+  hard: 'Design a scalable backend architecture for a real-time interview platform handling live audio, session state, and feedback generation.',
+};
+
+const getFallbackQuestion = ({ role, difficulty }) => {
+  const base = FALLBACK_QUESTIONS[difficulty] || FALLBACK_QUESTIONS.medium;
+  return `${base} (Role focus: ${role})`;
+};
+
+const logProviderError = (scope, err) => {
+  const status = err?.status || err?.response?.status || 'unknown';
+  const message = err?.message || 'Unknown provider error';
+  console.error(`[InterviewAI:${scope}] Provider error (${status}): ${message}`);
+};
 
 /**
  * Generates the first or a follow-up question
@@ -36,13 +57,18 @@ RULES:
       : [{ role: 'user', content: 'Please ask the next interview question based on my previous answer.' }]),
   ];
 
-  const result = await client.chat.completions.create({
-    model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
-    messages,
-    max_tokens: 300,
-  });
+  try {
+    const result = await client.chat.completions.create({
+      model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
+      messages,
+      max_tokens: 300,
+    });
 
-  return result.choices[0].message.content.trim();
+    return result.choices[0].message.content.trim();
+  } catch (err) {
+    logProviderError('generateInterviewQuestion', err);
+    return getFallbackQuestion({ role, difficulty });
+  }
 }
 
 /**
@@ -73,19 +99,20 @@ Return ONLY valid JSON. No extra text.`;
     { role: 'user', content: userAnswer },
   ];
 
-  const result = await client.chat.completions.create({
-    model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
-    messages,
-    max_tokens: 400,
-  });
-
   try {
+    const result = await client.chat.completions.create({
+      model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
+      messages,
+      max_tokens: 400,
+    });
+
     const raw = result.choices[0].message.content.trim();
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     return JSON.parse(jsonMatch ? jsonMatch[0] : raw);
-  } catch {
+  } catch (err) {
+    logProviderError('evaluateInterviewAnswer', err);
     return {
-      nextQuestion: isLast ? null : 'Can you tell me more about your experience with this?',
+      nextQuestion: isLast ? null : getFallbackQuestion({ role, difficulty: 'medium' }),
       quickFeedback: 'Thank you for your answer.',
     };
   }

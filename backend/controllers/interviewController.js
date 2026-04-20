@@ -127,18 +127,21 @@ Return ONLY valid JSON in this format:
       { role: 'user', content: 'Please evaluate the full interview now.' },
     ];
 
-    const result = await client.chat.completions.create({
-      model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
-      messages,
-      max_tokens: 2000,
-    });
-
     let evaluation;
     try {
+      const result = await client.chat.completions.create({
+        model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
+        messages,
+        max_tokens: 2000,
+      });
+
       const raw = result.choices[0].message.content.trim();
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       evaluation = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
-    } catch {
+    } catch (err) {
+      const status = err?.status || err?.response?.status || 'unknown';
+      const msg = err?.message || 'Unknown provider error';
+      console.error(`[InterviewAI:finishInterview] Provider error (${status}): ${msg}`);
       evaluation = {
         overallScore: 6,
         technicalScore: 6,

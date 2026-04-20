@@ -21,12 +21,22 @@ const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password');
+    // Support old and new token payload formats: { id }, { userId }, { _id }
+    const userId = decoded?.id || decoded?.userId || decoded?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token payload',
+      });
+    }
+
+    req.user = await User.findById(userId).select('-password');
 
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'User no longer exists',
+        message: 'User not found',
       });
     }
     next();

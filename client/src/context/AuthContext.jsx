@@ -31,17 +31,25 @@ export const AuthProvider = ({ children }) => {
 
   const login = (newToken, userData) => {
     localStorage.setItem('mm_token', newToken)
+    localStorage.setItem('mm_user', JSON.stringify(userData || null))
     setToken(newToken)
     setUser(userData)
   }
 
   const logout = () => {
     localStorage.removeItem('mm_token')
+    localStorage.removeItem('mm_user')
     setToken(null)
     setUser(null)
   }
 
-  const updateUser = (data) => setUser((prev) => ({ ...prev, ...data }))
+  const updateUser = (data) => {
+    setUser((prev) => {
+      const nextUser = { ...prev, ...data }
+      localStorage.setItem('mm_user', JSON.stringify(nextUser))
+      return nextUser
+    })
+  }
 
   return (
     <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
