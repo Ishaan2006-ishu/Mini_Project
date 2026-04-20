@@ -1,6 +1,19 @@
 const Role = require('../models/Role');
 const InterviewConfig = require('../models/InterviewConfig');
 
+const DEFAULT_ROLES = [
+  { name: 'Frontend Developer', slug: 'frontend-developer', sortOrder: 1 },
+  { name: 'Backend Developer', slug: 'backend-developer', sortOrder: 2 },
+  { name: 'Full Stack Developer', slug: 'full-stack-developer', sortOrder: 3 },
+  { name: 'DevOps Engineer', slug: 'devops-engineer', sortOrder: 4 },
+  { name: 'Data Analyst', slug: 'data-analyst', sortOrder: 5 },
+  { name: 'Data Scientist', slug: 'data-scientist', sortOrder: 6 },
+  { name: 'Machine Learning Engineer', slug: 'machine-learning-engineer', sortOrder: 7 },
+  { name: 'QA Engineer', slug: 'qa-engineer', sortOrder: 8 },
+  { name: 'Product Manager', slug: 'product-manager', sortOrder: 9 },
+  { name: 'UI/UX Designer', slug: 'ui-ux-designer', sortOrder: 10 },
+];
+
 
 const bootstrapRolesIfEmpty = async () => {
 	const count = await Role.estimatedDocumentCount();
@@ -91,60 +104,41 @@ const toAnswerLetter = (answerValue = '') => {
 };
 
 // POST /api/sessions/start
+// In exports.startSession — change this block:
 exports.startSession = async (req, res, next) => {
   try {
-    const { role, difficulty, count, durationMinutes, type } = req.body;
+    const { role, difficulty, count, durationMinutes, type, company } = req.body; // ← added company
 
-    if (!role || !difficulty) {
-      return res.status(400).json({
-        success: false,
-        message: 'Role and difficulty are required',
-      });
-    }
+    if (!role || !difficulty)
+      return res.status(400).json({ success: false, message: "Role and difficulty are required" });
 
-    const safeCount = Math.max(1, Math.min(Number(count) || 5, 30));
+    const safeCount    = Math.max(1, Math.min(Number(count) || 5, 30));
     const safeDuration = Number(durationMinutes) || 20;
-    const safeType = type || 'practice';
+    const safeType     = type || "practice";
+    const safeCompany  = company ? String(company).trim() : null; // ← NEW
 
-    const generatedQuestions = await generateMcqQuestions({
-      role,
-      difficulty,
-      count: safeCount,
-    });
+    const generatedQuestions = await generateMcqQuestions(
+      role, difficulty, safeCount, safeCompany   // ← pass company to AI
+    );
 
-    const questions = generatedQuestions.map((q, idx) => ({
-      questionId: q.questionId || `q${idx + 1}`,
-      question: q.questionText,
-      questionText: q.questionText,
-      options: q.options,
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-    }));
-    
     const session = await Session.create({
-      user: req.user.id,
-      role,
-      difficulty,
-      count: safeCount,
-      durationMinutes: safeDuration,
+      user: req.user.id, role, difficulty,
+      count: safeCount, durationMinutes: safeDuration,
       type: safeType,
-      questions,
+      company: safeCompany,  // ← save to DB
+      questions: generatedQuestions.map((q, idx) => ({
+        questionId: q.questionId || `q${idx + 1}`,
+        question: q.questionText, questionText: q.questionText,
+        options: q.options, correctAnswer: q.correctAnswer, explanation: q.explanation,
+      })),
     });
 
-    res.status(201).json({
-      success: true,
-      session: {
-        id: session._id,
-        role: session.role,
-        difficulty: session.difficulty,
-        type: session.type,
-        durationMinutes: session.durationMinutes,
-        questions: session.questions,
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
+    res.status(201).json({ success: true, session: {
+      id: session.id, role: session.role, difficulty: session.difficulty,
+      type: session.type, company: session.company,
+      durationMinutes: session.durationMinutes, questions: session.questions,
+    }});
+  } catch (err) { next(err); }
 };
 
 // GET /api/sessions/history

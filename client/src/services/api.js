@@ -56,4 +56,10 @@ export const paymentAPI = {
   verifyPayment: (data) => api.post('/payments/verify', data),
 }
 
+export const interviewAPI = {
+  start: (data) => api.post('/interview/start', data),
+  respond: (id, data) => api.post(`/interview/${id}/respond`, data),
+  finish: (id, data) => api.post(`/interview/${id}/finish`, data),
+}
+
 export default api

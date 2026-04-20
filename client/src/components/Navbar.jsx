@@ -58,7 +58,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../context/useAuth'
+import { useAuth } from '../context/AuthContext'
 
 const Navbar = () => {
   const { user, logout } = useAuth()

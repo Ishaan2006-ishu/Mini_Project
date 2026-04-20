@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { authAPI } from '../services/api'
-import { useAuth } from '../context/useAuth'
+import { useAuth } from '../context/AuthContext'
 import Navbar from '../components/Navbar'
 import Loader from '../components/Loader'
 import toast from 'react-hot-toast'

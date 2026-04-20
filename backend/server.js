@@ -20,9 +20,7 @@ app.use('/api/sessions', require('./routes/session.routes'));
 app.use('/api/plans', require('./routes/plan.routes'));
 app.use('/api/companies', require('./routes/company.routes'));
 app.use('/api/payments', require('./routes/payment.routes'));
-
-
-
+app.use('/api/interview',require('./routes/interview.routes'));
 
 app.get('/', (req, res) =>
   res.json({ message: 'MockMate Pro API ✅' })
