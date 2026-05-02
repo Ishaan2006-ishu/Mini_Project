@@ -3,6 +3,15 @@ const toNumber = (value, fallback) => {
 	return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const parseOrigins = (value) => {
+	if (!value || value === '*') return '*';
+	const origins = String(value)
+		.split(',')
+		.map((item) => item.trim())
+		.filter(Boolean);
+	return origins.length ? origins : '*';
+};
+
 const AUTH_CONSTANTS = {
 	OTP_LENGTH: toNumber(process.env.OTP_LENGTH, 6),
 	OTP_EXPIRY_SECONDS: toNumber(process.env.OTP_EXPIRY_SECONDS, 600),
@@ -12,7 +21,8 @@ const AUTH_CONSTANTS = {
 
 const APP_CONSTANTS = {
 	JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
-	CORS_ORIGIN: process.env.CORS_ORIGIN || '*',
+	CORS_ORIGINS: parseOrigins(process.env.CORS_ORIGIN),
+	NODE_ENV: process.env.NODE_ENV || 'development',
 };
 
 module.exports = {

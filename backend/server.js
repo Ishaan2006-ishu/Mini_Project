@@ -9,9 +9,10 @@ connectDB();
 
 const app = express();
 
+const corsOrigins = APP_CONSTANTS.CORS_ORIGINS;
 app.use(cors({
-  origin: APP_CONSTANTS.CORS_ORIGIN,
-  credentials: true,
+  origin: corsOrigins,
+  credentials: corsOrigins !== '*',
 }));
 app.use(express.json());
 
@@ -33,5 +34,5 @@ app.use(require('./middleware/error.middleware'));
 
 const PORT = process.env.PORT || 5800;
 app.listen(PORT, () =>
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
+  console.log(`🚀 Server running on port ${PORT} (${APP_CONSTANTS.NODE_ENV})`)
 );

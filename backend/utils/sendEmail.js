@@ -1,19 +1,82 @@
-const nodemailer = require('nodemailer');
+const https = require('https');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const getBrevoApiKey = () =>
+  (process.env.BREVO_API_KEY || '')
+    .trim()
+    .replace(/^['\"]|['\"]$/g, '');
+
+const parseEmailFrom = (fromValue = '') => {
+  const match = fromValue.match(/^(.*)<([^>]+)>$/);
+  if (!match) {
+    return {
+      name: process.env.BREVO_SENDER_NAME || 'MockMate Pro',
+      email: process.env.BREVO_SENDER_EMAIL || fromValue || '',
+    };
+  }
+
+  return {
+    name: (match[1] || '').trim() || process.env.BREVO_SENDER_NAME || 'MockMate Pro',
+    email: (match[2] || '').trim() || process.env.BREVO_SENDER_EMAIL || '',
+  };
+};
+
+const sendWithBrevo = (payload) =>
+  new Promise((resolve, reject) => {
+    const apiKey = getBrevoApiKey();
+
+    const request = https.request(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        method: 'POST',
+        headers: {
+          'api-key': apiKey,
+          'Content-Type': 'application/json',
+        },
+      },
+      (response) => {
+        let data = '';
+
+        response.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        response.on('end', () => {
+          const isSuccess = response.statusCode >= 200 && response.statusCode < 300;
+          if (!isSuccess) {
+            if (response.statusCode === 401) {
+              return reject(
+                new Error(
+                  'Brevo unauthorized (401): API key is invalid/revoked or from a different account. Regenerate BREVO_API_KEY in Brevo dashboard and restart backend.'
+                )
+              );
+            }
+
+            return reject(
+              new Error(`Brevo request failed (${response.statusCode}): ${data || 'No response body'}`)
+            );
+          }
+
+          resolve(data);
+        });
+      }
+    );
+
+    request.on('error', reject);
+    request.write(JSON.stringify(payload));
+    request.end();
+  });
 
 const sendOtpEmail = async (toEmail, toName, otp) => {
-  const mailOptions = {
-    from: process.env.EMAIL_FROM,
-    to: toEmail,
-    subject: 'MockMate Pro — Your OTP Verification Code',
-    html: `
+  if (!getBrevoApiKey()) {
+    throw new Error('BREVO_API_KEY is missing in environment variables');
+  }
+
+  const sender = parseEmailFrom(process.env.EMAIL_FROM || '');
+  if (!sender.email) {
+    throw new Error('Set BREVO_SENDER_EMAIL or EMAIL_FROM with a valid sender email');
+  }
+
+  const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto;
                   border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden;">
 
@@ -38,7 +101,7 @@ const sendOtpEmail = async (toEmail, toName, otp) => {
           <!-- OTP Box -->
           <div style="background: #f3f0ec; border-radius: 8px; padding: 24px;
                       text-align: center; margin-bottom: 24px;">
-            <p style="margin: 0 0 8px; font-size: 13px; color: #7a7974; 
+            <p style="margin: 0 0 8px; font-size: 13px; color: #7a7974;
                       text-transform: uppercase; letter-spacing: 1px;">
               Your OTP Code
             </p>
@@ -61,10 +124,16 @@ const sendOtpEmail = async (toEmail, toName, otp) => {
           </p>
         </div>
       </div>
-    `,
+    `;
+
+  const mailOptions = {
+    sender,
+    to: [{ email: toEmail }],
+    subject: 'MockMate Pro — Your OTP Verification Code',
+    htmlContent,
   };
 
-  await transporter.sendMail(mailOptions);
+  await sendWithBrevo(mailOptions);
 };
 
 module.exports = { sendOtpEmail };

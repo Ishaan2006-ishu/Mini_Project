@@ -10,17 +10,6 @@ const getClient = () =>
     },
   });
 
-const FALLBACK_QUESTIONS = {
-  easy: 'Can you explain the difference between a REST API and a GraphQL API with a simple example?',
-  medium: 'How would you design and implement authentication and authorization for a backend service used by mobile and web clients?',
-  hard: 'Design a scalable backend architecture for a real-time interview platform handling live audio, session state, and feedback generation.',
-};
-
-const getFallbackQuestion = ({ role, difficulty }) => {
-  const base = FALLBACK_QUESTIONS[difficulty] || FALLBACK_QUESTIONS.medium;
-  return `${base} (Role focus: ${role})`;
-};
-
 const logProviderError = (scope, err) => {
   const status = err?.status || err?.response?.status || 'unknown';
   const message = err?.message || 'Unknown provider error';
@@ -67,7 +56,9 @@ RULES:
     return result.choices[0].message.content.trim();
   } catch (err) {
     logProviderError('generateInterviewQuestion', err);
-    return getFallbackQuestion({ role, difficulty });
+    const error = new Error(`AI provider error while generating interview question: ${err?.message || 'Unknown error'}`);
+    error.statusCode = 502;
+    throw error;
   }
 }
 
@@ -111,10 +102,9 @@ Return ONLY valid JSON. No extra text.`;
     return JSON.parse(jsonMatch ? jsonMatch[0] : raw);
   } catch (err) {
     logProviderError('evaluateInterviewAnswer', err);
-    return {
-      nextQuestion: isLast ? null : getFallbackQuestion({ role, difficulty: 'medium' }),
-      quickFeedback: 'Thank you for your answer.',
-    };
+    const error = new Error(`AI provider error while evaluating interview answer: ${err?.message || 'Unknown error'}`);
+    error.statusCode = 502;
+    throw error;
   }
 }
 

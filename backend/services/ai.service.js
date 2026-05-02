@@ -102,6 +102,12 @@ const normalizeQuestion = (q, idx) => {
   };
 };
 
+const logProviderError = (scope, err) => {
+  const status = err?.status || err?.response?.status || 'unknown';
+  const message = err?.message || 'Unknown provider error';
+  console.error(`[AI:${scope}] Provider error (${status}): ${message}`);
+};
+
 const requestQuestionsBatch = async ({ client, role, difficulty, count, company }) => {
   const completion = await client.chat.completions.create({
     model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
@@ -150,18 +156,28 @@ const generateMcqQuestions = async (role, difficulty, count = 5, company = null)
         lastErr = null;
         break;
       } catch (err) {
+        logProviderError(`requestQuestionsBatch/attempt-${attempt}`, err);
         lastErr = err;
       }
     }
 
     if (!batchQuestions.length) {
-      throw new Error(`Failed to generate AI MCQ questions: ${lastErr?.message || 'Unknown error'}`);
+      const error = new Error(`AI provider error while generating MCQs: ${lastErr?.message || 'Unknown error'}`);
+      error.statusCode = 502;
+      throw error;
     }
 
     allQuestions.push(...batchQuestions.slice(0, currentBatchSize));
   }
 
-  return allQuestions.slice(0, safeCount).map(normalizeQuestion);
+  // Ensure unique question IDs across the full session even if upstream returns duplicates.
+  return allQuestions.slice(0, safeCount).map((q, idx) => {
+    const normalized = normalizeQuestion(q, idx);
+    return {
+      ...normalized,
+      questionId: `q${idx + 1}`,
+    };
+  });
 };
 
 

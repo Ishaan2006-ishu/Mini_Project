@@ -101,6 +101,10 @@ exports.finishInterview = async (req, res, next) => {
     const client = new OpenAI({
       baseURL: process.env.OPENROUTER_API_URL,
       apiKey:  process.env.OPENROUTER_API_KEY,
+      defaultHeaders: {
+        'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'http://localhost:3000',
+        'X-Title': process.env.OPENROUTER_SITE_NAME || 'MockMate Pro',
+      },
     });
 
     const systemPrompt = `You are an expert technical interviewer.
@@ -142,16 +146,9 @@ Return ONLY valid JSON in this format:
       const status = err?.status || err?.response?.status || 'unknown';
       const msg = err?.message || 'Unknown provider error';
       console.error(`[InterviewAI:finishInterview] Provider error (${status}): ${msg}`);
-      evaluation = {
-        overallScore: 6,
-        technicalScore: 6,
-        communicationScore: 6,
-        confidenceScore: 6,
-        strengths: ['Participated actively'],
-        improvements: ['Could not parse AI feedback'],
-        summary: 'Interview completed successfully.',
-        questionScores: [],
-      };
+      const error = new Error(`AI provider error while finishing interview: ${msg}`);
+      error.statusCode = 502;
+      throw error;
     }
 
     // Build questions array for Session model

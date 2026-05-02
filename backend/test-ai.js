@@ -7,8 +7,8 @@ const run = async () => {
     apiKey:  process.env.OPENROUTER_API_KEY,
     baseURL: process.env.OPENROUTER_API_URL,
     defaultHeaders: {
-      'HTTP-Referer': 'http://localhost:3000',
-      'X-Title': 'MockMate Pro',
+      'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'http://localhost:3000',
+      'X-Title': process.env.OPENROUTER_SITE_NAME || 'MockMate Pro',
     },
   })
 
