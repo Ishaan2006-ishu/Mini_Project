@@ -28,7 +28,7 @@ const buildPrompt = (role, difficulty, count, company = null) => {
 You are an expert technical interviewer.
 ${companyLine}
 
-Generate ${count} multiple-choice questions for role: "${role}" at difficulty: "${difficulty}".
+Generate unique ${count} multiple-choice questions for role: "${role}" at difficulty: "${difficulty}".
 
 Return ONLY valid JSON in this exact shape — no markdown, no code fences:
 {
