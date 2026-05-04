@@ -93,8 +93,8 @@ const Login = () => {
           <div className="mb-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">
             <p className="font-semibold mb-2">Demo account</p>
             <div className="space-y-1 text-indigo-800">
-              <p><span className="font-medium">Email:</span> testuser.@gmail.com</p>
-              <p><span className="font-medium">Password:</span> testpassword</p>
+              <p><span className="font-medium">Email:</span> testuser@gmail.com</p>
+              <p><span className="font-medium">Password:</span> testpassword@1234</p>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-indigo-700">
               If you do not want to register, use the demo credentials above.
