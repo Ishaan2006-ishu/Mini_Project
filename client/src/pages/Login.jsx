@@ -22,8 +22,22 @@ const Login = () => {
     setLoading(true)
     try {
       const res = await authAPI.login(form)
-      login(res.data.token, res.data.user)
-      toast.success(`Welcome back, ${res.data.user.name}!`)
+      const token = res?.data?.token || res?.data?.data?.token || res?.data?.accessToken || res?.data?.auth?.token
+      const userData = res?.data?.user || res?.data?.data?.user || null
+
+      if (!token) {
+        toast.error('Login succeeded but token was not returned by server')
+        setLoading(false)
+        return
+      }
+
+      // ensure token stored even if login helper changes
+      try { login(token, userData) } catch (e) {
+        localStorage.setItem('mm_token', token)
+        if (userData) localStorage.setItem('mm_user', JSON.stringify(userData))
+      }
+
+      toast.success(`Welcome back, ${userData?.name || 'user'}!`)
       navigate('/dashboard')
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed')

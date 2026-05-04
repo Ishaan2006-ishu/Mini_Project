@@ -69,8 +69,8 @@ const Navbar = () => {
 
   const links = [
     { to: '/dashboard',     label: 'Dashboard' },
-    { to: '/role-select',   label: 'New Interview' },
-    { to: '/company-prep',  label: 'Company Prep' },   // ← NEW
+    { to: '/interview-setup',   label: 'New Interview' },
+    { to: '/company-prep',  label: 'Company Prep' },
     { to: '/history',       label: 'History' },
   ]
 

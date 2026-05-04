@@ -52,7 +52,7 @@ const RoleSelect = () => {
         role,
         difficulty: diff,
         count: count,
-          type: 'practice',
+        type: 'interview',
       })
       toast.success('Questions ready!')
       navigate(`/session/${res.data.session.id}`, {
