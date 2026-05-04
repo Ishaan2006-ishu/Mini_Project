@@ -163,6 +163,13 @@ const Dashboard = () => {
           )}
         </div>
 
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold mb-1">Backend note</p>
+          <p className="text-amber-800 leading-relaxed">
+            The backend is deployed on Render, so the first request may take 50-60 seconds to respond.
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
           {kpis.map(({ icon, label, value }) => (
             <div key={label} className="card p-4 text-center">

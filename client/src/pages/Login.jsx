@@ -76,6 +76,18 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h2>
           <p className="text-sm text-gray-500 mb-7">Welcome back! Enter your credentials to continue.</p>
 
+          <div className="mb-6 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">
+            <p className="font-semibold mb-2">Demo account</p>
+            <div className="space-y-1 text-indigo-800">
+              <p><span className="font-medium">Email:</span> testuser.@gmail.com</p>
+              <p><span className="font-medium">Password:</span> testpassword</p>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-indigo-700">
+              If you do not want to register, use the demo credentials above.
+              Backend is deployed on Render, so the first request may take 50-60 seconds to respond.
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
