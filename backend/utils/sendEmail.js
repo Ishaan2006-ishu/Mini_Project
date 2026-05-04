@@ -1,7 +1,7 @@
 const https = require('https');
 
-const getBrevoApiKey = () =>
-  (process.env.BREVO_API_KEY || '')
+const getResendApiKey = () =>
+  (process.env.RESEND_API_KEY || '')
     .trim()
     .replace(/^['\"]|['\"]$/g, '');
 
@@ -9,27 +9,32 @@ const parseEmailFrom = (fromValue = '') => {
   const match = fromValue.match(/^(.*)<([^>]+)>$/);
   if (!match) {
     return {
-      name: process.env.BREVO_SENDER_NAME || 'MockMate Pro',
-      email: process.env.BREVO_SENDER_EMAIL || fromValue || '',
+      name: process.env.RESEND_SENDER_NAME || 'MockMate Pro',
+      email: process.env.RESEND_SENDER_EMAIL || fromValue || '',
     };
   }
 
   return {
-    name: (match[1] || '').trim() || process.env.BREVO_SENDER_NAME || 'MockMate Pro',
-    email: (match[2] || '').trim() || process.env.BREVO_SENDER_EMAIL || '',
+    name: (match[1] || '').trim() || process.env.RESEND_SENDER_NAME || 'MockMate Pro',
+    email: (match[2] || '').trim() || process.env.RESEND_SENDER_EMAIL || '',
   };
 };
 
-const sendWithBrevo = (payload) =>
+const buildFromAddress = (sender) => {
+  if (!sender?.email) return '';
+  return sender.name ? `${sender.name} <${sender.email}>` : sender.email;
+};
+
+const sendWithResend = (payload) =>
   new Promise((resolve, reject) => {
-    const apiKey = getBrevoApiKey();
+    const apiKey = getResendApiKey();
 
     const request = https.request(
-      'https://api.brevo.com/v3/smtp/email',
+      'https://api.resend.com/emails',
       {
         method: 'POST',
         headers: {
-          'api-key': apiKey,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
       },
@@ -46,13 +51,13 @@ const sendWithBrevo = (payload) =>
             if (response.statusCode === 401) {
               return reject(
                 new Error(
-                  'Brevo unauthorized (401): API key is invalid/revoked or from a different account. Regenerate BREVO_API_KEY in Brevo dashboard and restart backend.'
+                  'Resend unauthorized (401): API key is invalid/revoked or missing permission. Regenerate RESEND_API_KEY in the Resend dashboard and restart backend.'
                 )
               );
             }
 
             return reject(
-              new Error(`Brevo request failed (${response.statusCode}): ${data || 'No response body'}`)
+              new Error(`Resend request failed (${response.statusCode}): ${data || 'No response body'}`)
             );
           }
 
@@ -67,13 +72,13 @@ const sendWithBrevo = (payload) =>
   });
 
 const sendOtpEmail = async (toEmail, toName, otp) => {
-  if (!getBrevoApiKey()) {
-    throw new Error('BREVO_API_KEY is missing in environment variables');
+  if (!getResendApiKey()) {
+    throw new Error('RESEND_API_KEY is missing in environment variables');
   }
 
-  const sender = parseEmailFrom(process.env.EMAIL_FROM || '');
+  const sender = parseEmailFrom(process.env.EMAIL_FROM || process.env.RESEND_FROM || '');
   if (!sender.email) {
-    throw new Error('Set BREVO_SENDER_EMAIL or EMAIL_FROM with a valid sender email');
+    throw new Error('Set RESEND_SENDER_EMAIL or EMAIL_FROM with a valid sender email');
   }
 
   const htmlContent = `
@@ -127,13 +132,13 @@ const sendOtpEmail = async (toEmail, toName, otp) => {
     `;
 
   const mailOptions = {
-    sender,
-    to: [{ email: toEmail }],
+    from: buildFromAddress(sender),
+    to: [toEmail],
     subject: 'MockMate Pro — Your OTP Verification Code',
-    htmlContent,
+    html: htmlContent,
   };
 
-  await sendWithBrevo(mailOptions);
+  await sendWithResend(mailOptions);
 };
 
 module.exports = { sendOtpEmail };
