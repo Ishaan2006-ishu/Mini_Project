@@ -3,10 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import toast from 'react-hot-toast'
 import { planAPI, paymentAPI } from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 const Premium = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { updateUser } = useAuth()
   const { company, role } = location.state || {}
   const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
@@ -65,6 +67,7 @@ const Premium = () => {
 
       const { data } = await paymentAPI.createOrder({ planId: plan.planId })
       const order = data?.order
+      const transactionId = data?.transactionId
 
       if (!order?.id) {
         throw new Error('Order was not created')
@@ -86,31 +89,86 @@ const Premium = () => {
         },
         handler: async (response) => {
           try {
+            console.log('🔍 Razorpay Response received:', response)
+            
+            // Validate response has required fields
+            if (!response?.razorpay_order_id || !response?.razorpay_payment_id || !response?.razorpay_signature) {
+              console.error('❌ Missing required fields in response:', response)
+              toast.error('Payment response incomplete. Missing payment ID or signature.')
+              return
+            }
+
+            console.log('📤 Calling verifyPayment with:', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId: plan.planId,
+            })
+            
             const verifyRes = await paymentAPI.verifyPayment({
-              ...response,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
               planId: plan.planId,
             })
 
-            if (verifyRes.data?.success) {
-              toast.success(`${plan.name} purchased successfully`)
+            console.log('✅ Verify Response:', verifyRes?.data)
+
+            if (verifyRes?.data?.success) {
+              // Update user context with premium status
+              if (verifyRes.data?.user) {
+                console.log('📝 Updating user context:', verifyRes.data.user)
+                updateUser(verifyRes.data.user)
+              }
+              
+              toast.success(`${plan.name} purchased successfully! 🎉`)
+              
+              // Redirect to History to see the successful transaction
+              setTimeout(() => {
+                navigate('/history', { state: { tab: 'transactions' } })
+              }, 1500)
             } else {
-              toast.error('Payment verification failed')
+              console.error('❌ Verification returned success: false', verifyRes?.data)
+              toast.error('Payment verification failed. Please check your transaction history.')
             }
           } catch (verifyErr) {
-            toast.error(verifyErr.response?.data?.message || 'Payment verification failed')
+            console.error('❌ Payment verification error:', {
+              message: verifyErr?.message,
+              response: verifyErr?.response?.data,
+              status: verifyErr?.response?.status,
+              fullError: verifyErr
+            })
+            toast.error(verifyErr?.response?.data?.message || 'Payment verification failed. Check transaction history.')
           }
         },
         modal: {
-          ondismiss: () => {
-            toast('Payment cancelled')
+          ondismiss: async () => {
+            try {
+              if (transactionId) {
+                await paymentAPI.cancelTransaction(transactionId)
+              }
+              toast('Payment cancelled')
+            } catch (err) {
+              console.error('Error cancelling transaction:', err)
+              toast('Payment cancelled')
+            }
           },
         },
       }
 
       const razorpay = new window.Razorpay(options)
+      
       razorpay.on('payment.failed', (response) => {
-        toast.error(response?.error?.description || 'Payment failed in test mode')
+        console.error('❌ Payment failed event triggered:', response)
+        toast.error(response?.error?.description || 'Payment failed. Please try again.')
       })
+      
+      razorpay.on('payment.success', (response) => {
+        console.log('✅ Payment success event triggered:', response)
+        // This shouldn't normally fire, the handler callback should be used instead
+      })
+
+      console.log('🎯 Opening Razorpay modal...')
       razorpay.open()
     } catch (err) {
       toast.error(err.response?.data?.message || err.message || 'Failed to start payment')

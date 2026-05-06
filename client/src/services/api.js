@@ -56,6 +56,8 @@ export const companyAPI = {
 export const paymentAPI = {
   createOrder: (data) => api.post('/payments/create-order', data),
   verifyPayment: (data) => api.post('/payments/verify', data),
+  getTransactionHistory: () => api.get('/payments/transaction-history'),
+  cancelTransaction: (transactionId) => api.post(`/payments/cancel-transaction/${transactionId}`),
 }
 
 export const interviewAPI = {
