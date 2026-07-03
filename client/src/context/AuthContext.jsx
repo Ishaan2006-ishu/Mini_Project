@@ -13,14 +13,19 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       if (!token) {
+        setUser(null)
         setLoading(false)
         return
       }
       try {
         const res = await authAPI.getMe()
-        if (res?.data?.user) setUser(res.data.user)
-        else logout()
-      } catch {
+        if (res?.data?.user) {
+          setUser(res.data.user)
+        } else {
+          logout()
+        }
+      } catch (err) {
+        // Token might be invalid or expired
         logout()
       } finally {
         setLoading(false)
@@ -30,10 +35,15 @@ export const AuthProvider = ({ children }) => {
   }, [token])
 
   const login = (newToken, userData) => {
+    if (!newToken) {
+      throw new Error('Token is required for login')
+    }
     localStorage.setItem('mm_token', newToken)
-    localStorage.setItem('mm_user', JSON.stringify(userData || null))
+    if (userData) {
+      localStorage.setItem('mm_user', JSON.stringify(userData))
+      setUser(userData)
+    }
     setToken(newToken)
-    setUser(userData)
   }
 
   const logout = () => {

@@ -77,6 +77,7 @@ exports.register = async (req, res, next) => {
       name:     name.trim(),
       password: hashedPassword,
       otp,
+      purpose:  'registration',
     });
 
     await sendOtpEmail(email, name.trim(), otp);

@@ -3,9 +3,9 @@ import { useAuth } from '../context/AuthContext'
 import Loader from './Loader'
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth()
+  const { token, loading } = useAuth()
   if (loading) return <Loader />
-  if (!user)   return <Navigate to="/login" replace />
+  if (!token)   return <Navigate to="/login" replace />
   return children
 }
 export default ProtectedRoute

@@ -109,8 +109,11 @@ const logProviderError = (scope, err) => {
 };
 
 const requestQuestionsBatch = async ({ client, role, difficulty, count, company }) => {
+  const modelName = process.env.OPENROUTER_MODEL || 'gpt-4o-mini';
+  console.debug(`[AI] requestQuestionsBatch using model: ${modelName}`);
+
   const completion = await client.chat.completions.create({
-    model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
+    model: modelName,
     messages: [{ role: 'user', content: buildPrompt(role, difficulty, count, company) }],
     max_tokens: Number(process.env.OPENROUTER_MAX_COMPLETION_TOKENS) || 1800,
     temperature: 0.5,

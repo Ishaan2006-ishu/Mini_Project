@@ -47,8 +47,11 @@ RULES:
   ];
 
   try {
+    const modelName = process.env.OPENROUTER_MODEL || 'gpt-4o-mini';
+    console.debug(`[InterviewAI] generateInterviewQuestion using model: ${modelName}`);
+
     const result = await client.chat.completions.create({
-      model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
+        model: modelName,
       messages,
       max_tokens: 300,
     });
@@ -91,8 +94,11 @@ Return ONLY valid JSON. No extra text.`;
   ];
 
   try {
+    const modelName = process.env.OPENROUTER_MODEL || 'gpt-4o-mini';
+    console.debug(`[InterviewAI] evaluateInterviewAnswer using model: ${modelName}`);
+
     const result = await client.chat.completions.create({
-      model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
+      model: modelName,
       messages,
       max_tokens: 400,
     });
