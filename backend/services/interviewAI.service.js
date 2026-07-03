@@ -2,8 +2,8 @@ const { OpenAI } = require('openai');
 
 const getClient = () =>
   new OpenAI({
-    baseURL: process.env.OPENROUTER_API_URL,
-    apiKey:  process.env.OPENROUTER_API_KEY,
+    baseURL: process.env.OPENROUTER_API_URL || undefined,
+    apiKey: process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY,
     defaultHeaders: {
       'HTTP-Referer': process.env.OPENROUTER_SITE_URL || 'http://localhost:3000',
       'X-Title': process.env.OPENROUTER_SITE_NAME || 'MockMate Pro',
@@ -14,6 +14,43 @@ const logProviderError = (scope, err) => {
   const status = err?.status || err?.response?.status || 'unknown';
   const message = err?.message || 'Unknown provider error';
   console.error(`[InterviewAI:${scope}] Provider error (${status}): ${message}`);
+  if (err?.response?.data) console.error(`[InterviewAI:${scope}] provider data:`, err.response.data);
+};
+
+const parseInterviewAiResponse = (raw) => {
+  const text = String(raw || '').trim();
+  if (!text) throw new Error('AI response is empty.');
+
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch (parseErr) {
+      console.error('[InterviewAI] Failed JSON parse, raw response:', text);
+    }
+  }
+
+  const nextQuestionMatch = text.match(/(?:next question|follow[- ]up question|question)\s*[:\-]\s*["']?([^"'\n]+)["']?/i);
+  const quickFeedbackMatch = text.match(/quickFeedback\s*[:=]\s*["']([^"']+)["']/i);
+  if (nextQuestionMatch || quickFeedbackMatch) {
+    return {
+      nextQuestion: nextQuestionMatch?.[1]?.trim() || null,
+      quickFeedback: quickFeedbackMatch?.[1]?.trim() || '',
+    };
+  }
+
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const questionLine = lines.find((line) => line.endsWith('?')) || lines[0] || null;
+  const feedbackLines = lines.filter((line) => line !== questionLine);
+
+  if (!questionLine) {
+    console.warn('[InterviewAI] Unexpected raw response without a question:', text);
+  }
+
+  return {
+    nextQuestion: questionLine,
+    quickFeedback: feedbackLines.join(' ').trim(),
+  };
 };
 
 /**
@@ -103,9 +140,8 @@ Return ONLY valid JSON. No extra text.`;
       max_tokens: 400,
     });
 
-    const raw = result.choices[0].message.content.trim();
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    return JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    const raw = String(result.choices?.[0]?.message?.content || '').trim();
+    return parseInterviewAiResponse(raw);
   } catch (err) {
     logProviderError('evaluateInterviewAnswer', err);
     const error = new Error(`AI provider error while evaluating interview answer: ${err?.message || 'Unknown error'}`);

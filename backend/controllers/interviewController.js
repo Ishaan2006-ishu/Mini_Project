@@ -133,8 +133,10 @@ Return ONLY valid JSON in this format:
 
     let evaluation;
     try {
+      const modelName = process.env.OPENROUTER_MODEL || 'gpt-4o-mini';
+      console.debug(`[InterviewAI:finishInterview] using model: ${modelName}`);
       const result = await client.chat.completions.create({
-        model: process.env.OPENROUTER_MODEL || 'mistralai/mixtral-8x7b-instruct',
+        model: modelName,
         messages,
         max_tokens: 2000,
       });
