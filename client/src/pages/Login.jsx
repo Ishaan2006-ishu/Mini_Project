@@ -345,6 +345,14 @@ import { authAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
+const FEATURES = [
+  'Secure JWT authentication with email OTP verification',
+  'Role-based questions across easy, medium, hard levels',
+  'Real-time feedback with performance analytics dashboard',
+  'Secure subscription payments powered by Razorpay',
+  'Track your interview history and improvement over time',
+]
+
 const Login = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
@@ -435,26 +443,33 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h2>
           <p className="text-sm text-gray-500 mb-7">Welcome back! Enter your credentials to continue.</p>
 
-          {/* AI Ready Badge */}
-          <div className="mb-6 relative rounded-2xl border border-indigo-100 bg-white p-4 overflow-hidden shadow-sm">
+          {/* Feature Highlight Card */}
+          <div className="mb-6 relative rounded-2xl border border-indigo-100 bg-white p-6 overflow-hidden shadow-sm">
             <div
               className="absolute inset-0 opacity-40 pointer-events-none"
               style={{
                 background: 'linear-gradient(120deg, transparent 30%, rgba(99,102,241,0.15) 50%, transparent 70%)',
                 backgroundSize: '200% 100%',
-                animation: 'shimmer 2.5s linear infinite'
+                animation: 'shimmer 3s linear infinite'
               }}
             />
-            <div className="relative flex items-center gap-3">
-              <span className="relative flex h-2.5 w-2.5 flex-shrink-0">
+            <div className="relative flex items-center gap-3 mb-3">
+              <span className="relative flex h-3 w-3 flex-shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
               </span>
-              <p className="text-sm font-semibold text-gray-900">AI Interview Coach is online</p>
+              <p className="text-sm font-semibold text-gray-900">MockMate Pro is ready</p>
             </div>
-            <p className="relative text-xs text-gray-500 mt-1.5 leading-relaxed">
-              Sign in to get role-specific questions, instant scoring, and real-time feedback on your answers.
-            </p>
+
+            <div className="relative h-5 overflow-hidden">
+              <div className="animate-feature-cycle">
+                {FEATURES.map((f, i) => (
+                  <p key={i} className="text-xs text-gray-500 leading-relaxed h-5 flex items-center">
+                    {f}
+                  </p>
+                ))}
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -506,6 +521,17 @@ const Login = () => {
         @keyframes shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
+        }
+        @keyframes feature-cycle {
+          0%, 14%   { transform: translateY(0); }
+          20%, 34%  { transform: translateY(-20px); }
+          40%, 54%  { transform: translateY(-40px); }
+          60%, 74%  { transform: translateY(-60px); }
+          80%, 94%  { transform: translateY(-80px); }
+          100%      { transform: translateY(-80px); }
+        }
+        .animate-feature-cycle {
+          animation: feature-cycle 15s ease-in-out infinite;
         }
       `}</style>
     </div>
