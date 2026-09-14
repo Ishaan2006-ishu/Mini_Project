@@ -39,7 +39,6 @@ const sendWithResend = (payload) =>
         },
       },
       (response) => {
-        console.log('[OTP DEBUG] Resend HTTP status:', response.statusCode);
         let data = '';
 
         response.on('data', (chunk) => {
@@ -49,8 +48,6 @@ const sendWithResend = (payload) =>
         response.on('end', () => {
           const isSuccess = response.statusCode >= 200 && response.statusCode < 300;
           if (!isSuccess) {
-            console.error('[OTP DEBUG] Resend rejected request');
-            console.error('[OTP DEBUG] Resend HTTP status:', response.statusCode);
             if (response.statusCode === 401) {
               return reject(
                 new Error(
@@ -64,24 +61,17 @@ const sendWithResend = (payload) =>
             );
           }
 
-          console.log('[OTP DEBUG] Resend accepted email request');
           resolve(data);
         });
       }
     );
 
-    request.on('error', (error) => {
-      console.error('[OTP DEBUG] Resend request error:', error?.message || 'Unknown request error');
-      reject(error);
-    });
+    request.on('error', reject);
     request.write(JSON.stringify(payload));
     request.end();
   });
 
 const sendOtpEmail = async (toEmail, toName, otp) => {
-  console.log('[OTP DEBUG] sendOtpEmail started', toEmail);
-  console.log('RESEND_API_KEY present:', Boolean(getResendApiKey()));
-
   if (!getResendApiKey()) {
     throw new Error('RESEND_API_KEY is missing in environment variables');
   }
@@ -90,8 +80,6 @@ const sendOtpEmail = async (toEmail, toName, otp) => {
   if (!sender.email) {
     throw new Error('Set RESEND_SENDER_EMAIL or EMAIL_FROM with a valid sender email');
   }
-
-  console.log('[OTP DEBUG] Sender:', sender.email);
 
   const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto;
@@ -150,9 +138,7 @@ const sendOtpEmail = async (toEmail, toName, otp) => {
     html: htmlContent,
   };
 
-  console.log('[OTP DEBUG] Sending request to Resend');
   await sendWithResend(mailOptions);
-  console.log('[OTP DEBUG] sendOtpEmail completed successfully');
 };
 
 module.exports = { sendOtpEmail };
