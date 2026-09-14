@@ -231,13 +231,17 @@ exports.forgotPassword = async (req, res, next) => {
       purpose: 'reset_password',
     });
 
+    console.log('[OTP DEBUG] Calling sendOtpEmail', user.email);
     await sendOtpEmail(user.email, user.name, otp);
+    console.log('[OTP DEBUG] forgotPassword email sending completed');
 
     res.status(200).json({
       success: true,
       message: `Password reset OTP sent to ${user.email}`,
     });
   } catch (err) {
+    const safeErrorMessage = String(err?.message || 'Unknown error').split(':')[0];
+    console.error('[OTP DEBUG] forgotPassword error:', safeErrorMessage);
     next(err);
   }
 };
